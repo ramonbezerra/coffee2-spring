@@ -15,40 +15,57 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.edu.uepb.coffee.domain.Coffee;
 import br.edu.uepb.coffee.repository.CoffeeRepository;
+import br.edu.uepb.coffee.repository.CustomCoffeeRepository;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/coffees")
+@Api(value = "Coffee")
 public class CoffeeController {
+
+    @Autowired
+    private CustomCoffeeRepository customCoffeeRepository;
 
     @Autowired
     private CoffeeRepository coffeeRepository;
 
     //@RequestMapping(value = "/coffees", method = RequestMethod.GET)
     @GetMapping
+    @ApiOperation(value = "Busca uma lista de todos os cafés")
     public List<Coffee> getCoffees() {
-        return coffeeRepository.getCoffees();
+        return coffeeRepository.findAll();
+        // return customCoffeeRepository.getCoffees();
     }
 
     @GetMapping("/{id}")
-    public Optional<Coffee> getCoffeeById(@PathVariable String id) {
-        return coffeeRepository.getCoffeeById(id);
+    @ApiOperation(value = "Busca um café pelo seu identificador")
+    public Optional<Coffee> getCoffeeById(@PathVariable Long id) {
+        return coffeeRepository.findById(id);
+        // return customCoffeeRepository.getCoffeeById(id);
     }
 
     //@RequestMapping(value = "/coffees", method = RequestMethod.POST)
     @PostMapping
+    @ApiOperation(value = "Cria um novo café")
     public Coffee createCoffee(@RequestBody Coffee coffee) {
-        return coffeeRepository.createCoffee(coffee);
+        return coffeeRepository.save(coffee);
+        // return customCoffeeRepository.createCoffee(coffee);
     }
 
     //@RequestMapping(value = "/coffees", method = RequestMethod.PUT)
     @PutMapping("/{id}")
-    public Coffee updateCoffee(@PathVariable("id") String id, @RequestBody Coffee coffee) {
-        return coffeeRepository.updateCoffee(id, coffee);
+    @ApiOperation(value = "Atualiza um café a partir do seu identificador")
+    public Coffee updateCoffee(@PathVariable("id") Long id, @RequestBody Coffee coffee) {
+        return coffeeRepository.save(coffee);
+        // return customCoffeeRepository.updateCoffee(id, coffee);
     }
 
     //@RequestMapping(value = "/coffees", method = RequestMethod.DELETE)
     @DeleteMapping("/{id}")
-    public void deleteCoffee(@PathVariable String id) {
-        coffeeRepository.deleteCoffee(id);
+    @ApiOperation(value = "Exclui um café a partir do seu identificador")
+    public void deleteCoffee(@PathVariable Long id) {
+        coffeeRepository.delete(coffeeRepository.findById(id).get());
+        // customCoffeeRepository.deleteCoffee(id);
     }
 }

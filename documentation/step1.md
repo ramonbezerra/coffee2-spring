@@ -258,6 +258,9 @@ package br.edu.uepb.coffee.controller;
 import java.util.List;
 import java.util.Optional;
 
+import br.edu.uepb.coffee.domain.Coffee;
+import br.edu.uepb.coffee.repository.CoffeeRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -295,6 +298,6 @@ public class CoffeeController {
 }
 ```
 
-No próximo passo estaremos indicando como incluir a configuração 
+No próximo passo estaremos indicando como incluir a configuração para acesso a banco de dados.
 
 Para conferir a demonstração completa e o processo de codificação feito na aula, você pode [acessar aqui o vídeo](https://drive.google.com/file/d/12tHjQpfAfF_X5J-Tzi3aOxi34yWWdJcs/view?usp=sharing).
