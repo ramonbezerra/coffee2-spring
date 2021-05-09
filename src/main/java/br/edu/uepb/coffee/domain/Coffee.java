@@ -1,7 +1,5 @@
 package br.edu.uepb.coffee.domain;
 
-import java.util.UUID;
-
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Column;
@@ -27,8 +25,12 @@ public class Coffee {
     @Column(name = "name")
     private String name;
 
-    public Coffee(String name) {
+    @Column(name = "price")
+    private double price;
+
+    public Coffee(String name, double price) {
         // this.id = UUID.randomUUID().toString();
         this.name = name;
+        this.price = price;
     }
 }
