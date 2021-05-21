@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import br.edu.uepb.coffee.mapper.CoffeeMapper;
+import br.edu.uepb.coffee.mapper.UserMapper;
 
 @Configuration
 public class CoffeeMapperConfig {
@@ -17,6 +18,11 @@ public class CoffeeMapperConfig {
     @Bean
     public CoffeeMapper coffeeMapper() {
         return new CoffeeMapper();
+    }
+
+    @Bean
+    public UserMapper userMapper() {
+        return new UserMapper();
     }
 
 }
