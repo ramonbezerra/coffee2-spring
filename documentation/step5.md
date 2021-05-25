@@ -356,6 +356,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     protected void configure(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.headers().frameOptions().sameOrigin(); // acesso ao Banco de Dados em memória (H2)
         httpSecurity.cors().and().csrf().disable()
             .authorizeRequests()
             .antMatchers(AUTH_WHITELIST).permitAll()
@@ -423,3 +424,4 @@ Para tanto, acesse a rota `/signup` e envie, no corpo da requisição, um userna
 
 Em seguida, use o mesmo corpo de requisição chamando a rota `/login`. Você receberá nos headers da resposta um cabeçalho chamado `Authorization`, no formato `Bearer meu_token`. Copie o meu token e adicione ao cabeçalho da sua nova requisição à API `/coffees`. 
 
+Para conferir a demonstração completa e o processo de codificação feito na aula, você pode [acessar aqui o vídeo](https://drive.google.com/file/d/1dnvNc3gCDTO_TV_R7-DSVcjQ-aX20-fZ/view?usp=sharing).
