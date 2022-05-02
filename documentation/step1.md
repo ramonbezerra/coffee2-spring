@@ -14,7 +14,9 @@ As IDEs (Ambientes Integrados de Desenvolvimento) como o IntelliJ ou VSCode (atr
 
 É necessário primeiramente escolher o gerenciador de pacotes, entre Maven e Gradle, a linguagem entre Java (esta, utilizada neste projeto), Kotlin ou Groovy e a versão do Spring estável mais recente (utilizaremos as versões 2.5.x).
 
-Daí por diante, é necessário fornecer os metadados como grupo de pacotes, nome do artefato e do projeto, descrição, a forma de empacotamento entre .jar (utilizada neste projeto) e .war e a versão do Java (a versão 11 é a utilizada neste projeto.) Nosso arquivo de configuração pom.xml ficou assim:
+Daí por diante, é necessário fornecer os metadados como grupo de pacotes, nome do artefato e do projeto, descrição, a forma de empacotamento entre .jar (utilizada neste projeto) e .war e a versão do Java (a versão 11 é a utilizada neste projeto). 
+
+Nosso arquivo de configuração pom.xml, com as dependências mais básicas como **Spring Boot DevTools**, **Spring Web** e **Lombok**, ficou assim:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -328,5 +330,3 @@ public class CoffeeController {
 ```
 
 No próximo passo estaremos indicando como incluir a configuração para acesso a banco de dados.
-
-Para conferir a demonstração completa e o processo de codificação feito na aula, você pode [acessar aqui o vídeo](https://drive.google.com/file/d/12tHjQpfAfF_X5J-Tzi3aOxi34yWWdJcs/view?usp=sharing).
