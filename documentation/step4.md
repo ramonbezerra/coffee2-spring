@@ -7,42 +7,94 @@ Nesta etapa, você vai aprender a inserir elementos do código que te ajudarão 
 Para executar essa configuração, adicionamos a dependência do Model Mapper. Nosso arquivo de configuração build.gradle ficou assim:
 
 ```
-plugins {
-	id 'org.springframework.boot' version '2.4.4'
-	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-	id 'java'
-}
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.5.13</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>br.edu.uepb</groupId>
+	<artifactId>example</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>example</name>
+	<description>Demo project for Spring Boot</description>
+	<properties>
+		<java.version>11</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>io.springfox</groupId>
+		    <artifactId>springfox-swagger2</artifactId>
+		    <version>2.9.2</version>
+		</dependency>
+		<dependency>
+		    <groupId>io.springfox</groupId>
+		    <artifactId>springfox-swagger-ui</artifactId>
+		    <version>2.9.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.modelmapper</groupId>
+			<artifactId>modelmapper</artifactId>
+			<version>2.4.5</version>
+		</dependency>
 
-group = 'br.edu.uepb'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-}
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
-repositories {
-	mavenCentral()
-}
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'io.springfox:springfox-swagger2:2.9.2'
-	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
-	implementation 'org.modelmapper:modelmapper:2.3.5'
-	runtimeOnly 'com.h2database:h2'
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-test {
-	useJUnitPlatform()
-}
+</project>
 ```
 
 ## Adicionando novas classes: os DTOs
@@ -56,7 +108,7 @@ Precisamos inserir um novo tipo de objeto, o DTO (Data Transfer Object), que bas
 Para tanto, é preciso adicionar um novo pacote, *dto*, e inserir a classe abaixo:
 
 `CoffeeDTO.java`
-```
+```java
 package br.edu.uepb.coffee.dto;
 
 import lombok.Data;
@@ -79,7 +131,7 @@ A nova classe `CoffeeDTO` será usada na camada de apresentação, ou seja, no c
 No CoffeeController, vamos passar a receber e enviar objetos `CoffeeDTO`. Para tanto, vamos alterar nossas rotas, começando da rota para listar todos os cafés: 
 
 `CoffeeController.java`
-```
+```java
 package br.edu.uepb.coffee.controller;
 
 import java.util.List;
@@ -120,7 +172,7 @@ O problema dessa implementação é que o repositório trabalha apenas com a cla
 Para usar o mapeamento automático, é preciso adicionar uma nova classe no pacote *settings*:
 
 `CoffeeMapperConfig.java`
-```
+```java
 package br.edu.uepb.coffee.settings;
 
 import org.modelmapper.ModelMapper;
@@ -150,7 +202,7 @@ Os dois métodos anotados como `@Bean` serão componentes genéricos, que fogem 
 A segunda classe será inserida no novo pacote *mapper*:
 
 `CoffeeMapper.java`
-```
+```java
 package br.edu.uepb.coffee.mapper;
 
 import org.modelmapper.ModelMapper;
@@ -183,7 +235,7 @@ public class CoffeeMapper {
 Agora que temos a configuração de mapeamento realizada, podemos incluir a nova dependência no nosso controller e retornar o tipo de objeto corretamente na rota de listagem:
 
 `CoffeeController.java`
-```
+```java
 package br.edu.uepb.coffee.controller;
 
 import java.util.List;
@@ -239,7 +291,7 @@ Para tornar a nossa aplicação mais semântica, vamos adicionar mais DTOs de ac
 Para aplicar uma regra de negócio relacionada a concessão de descontos nos cafés, vamos criar um DTO específico para esse contexto:
 
 `CoffeeWithDiscountDTO.java`
-```
+```java
 package br.edu.uepb.coffee.dto;
 
 import lombok.Data;
@@ -254,7 +306,7 @@ public class CoffeeWithDiscountDTO {
 
 Para ele funcionar bem assim como o `CoffeeDTO`, é necessário estabelecer os métodos de mapeamento entre a classe de domínio e a classe de transferência de dados. 
 
-```
+```java
 package br.edu.uepb.coffee.mapper;
 
 import org.modelmapper.ModelMapper;
@@ -288,7 +340,7 @@ public class CoffeeMapper {
 Agora vamos criar a nossa classe de serviço dentro de um novo pacote chamado *services*:
 
 `CoffeeService.java`
-```
+```java
 package br.edu.uepb.coffee.services;
 
 import java.util.List;
@@ -348,7 +400,7 @@ public class CoffeeService {
 Note a existência de um método além dos métodos de CRUD, o `updateDiscountCoffee`, onde pudemos aplicar uma regra de negócio. Observe também a existência de uma exceção específica criada para a ocasião em que o usuário tentar criar um café cujo nome já exista registrato na base de dados. Esta exceção foi criada no pacote *exceptions*. Além dela, usamos também a exceção `NotFoundException`, para as situações em que um café não é encontrado de acordo com os parâmetros de busca passados como parâmetro.
 
 `ExistingCoffeeSameNameException.java`
-```
+```java
 package br.edu.uepb.coffee.exceptions;
 
 public class ExistingCoffeeSameNameException extends Exception {
@@ -361,7 +413,7 @@ public class ExistingCoffeeSameNameException extends Exception {
 Bem semântico, não acha? Veja que, com esses recursos, podemos melhorar e muito nosso `CoffeeController`, adicionando um novo endpoint *PATCH*, que se refere a uma atualização parcial dos dados, e o recurso `ResponseEntity` para manipular as respostas HTTP.
 
 `CoffeeController.java`
-```
+```java
 package br.edu.uepb.coffee.controller;
 
 import java.util.List;
@@ -463,7 +515,7 @@ public class CoffeeController {
 Note também a manipulação em outras requisições, melhorando o tratamento de erros quando não há dados, usando a classe abaixo:
 
 `GenericResponseErrorDTO.java`
-```
+```java
 package br.edu.uepb.coffee.dto;
 
 import lombok.AllArgsConstructor;
@@ -475,5 +527,3 @@ public class GenericResponseErrorDTO {
     private String error;
 }
 ```
-
-Para conferir a demonstração completa e o processo de codificação feito na aula, você pode [acessar aqui o vídeo](https://drive.google.com/file/d/1GgHkKItafcFBuFfjTB_j3tH1_hogLy-g/view?usp=sharing).
