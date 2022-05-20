@@ -4,7 +4,7 @@ Nesta etapa, você conseguirá inserir a configuração de documentação automa
 
 ## Dependências necessárias
 
-Para executar essa configuração, adicionamos a dependência do Swagger. Nosso arquivo de configuração build.gradle ficou assim:
+Para executar essa configuração, adicionamos a dependência do Swagger. Nosso arquivo de configuração pom.xml ficou assim:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
