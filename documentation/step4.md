@@ -416,35 +416,6 @@ Bem semântico, não acha? Veja que, com esses recursos, podemos melhorar e muit
 ```java
 package br.edu.uepb.coffee.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import br.edu.uepb.coffee.domain.Coffee;
-import br.edu.uepb.coffee.dto.CoffeeDTO;
-import br.edu.uepb.coffee.dto.CoffeeWithDiscountDTO;
-import br.edu.uepb.coffee.dto.GenericResponseErrorDTO;
-import br.edu.uepb.coffee.exceptions.ExistingCoffeeSameNameException;
-import br.edu.uepb.coffee.mapper.CoffeeMapper;
-import br.edu.uepb.coffee.services.CoffeeService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import javassist.NotFoundException;
-package br.edu.uepb.coffee.controller;
-
 // imports...
 
 @RestController
