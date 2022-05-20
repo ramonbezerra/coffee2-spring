@@ -4,7 +4,7 @@ Nesta etapa, você conseguirá inserir a configuração de acesso ao banco de da
 
 ## Dependências necessárias
 
-Para executar essa configuração, adicionamos a dependência do Spring Data JPA e simularemos um banco em memória com o H2. Nosso arquivo de configuração build.gradle ficou assim:
+Para executar essa configuração, adicionamos a dependência do Spring Data JPA e simularemos um banco em memória com o H2. Nosso arquivo de configuração pom.xml ficou assim:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
