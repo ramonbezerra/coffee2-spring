@@ -6,7 +6,7 @@ Nesta etapa, você vai aprender a configurar a parte de segurança da aplicaçã
 
 Para executar essa configuração, adicionamos a dependência do Spring Security. Nosso arquivo de configuração pom.xml ficou assim:
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -104,7 +104,7 @@ JSON Web Tokens, conhecidos como JWTs, são usados para formar autorização par
 Logo, teremos que cadastrar usuários, gerenciando o acesso por meio de username e senha, que serão as credenciais para geração de tokens e posterior acesso aos recursos da API. Para tanto, é preciso adicionar uma nova entidade do domínio, como na classe abaixo. *Lembre-se também de adicionar seu DTO e seu Mapper!*
 
 `User.java`
-```
+```java
 package br.edu.uepb.coffee.domain;
 
 import java.io.Serializable;
@@ -140,7 +140,7 @@ public class User implements Serializable {
 Para cadastrar novos usuários precisamos de uma rota para receber os dados de username e senha: 
 
 `SignUpController.java`
-```
+```java
 package br.edu.uepb.coffee.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -176,7 +176,7 @@ public class SignUpController {
 Note que há o uso de um serviço e de um repositório novos, inclusos por meio das classes a seguir: 
 
 `UserService.java`
-```
+```java
 package br.edu.uepb.coffee.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -203,7 +203,7 @@ public class UserService {
 ```
 
 `UserRepository.java`
-```
+```java
 package br.edu.uepb.coffee.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -220,7 +220,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 Um novo componente Bean também é necessário, para criptografia das senhas dos usuários.
 
 `PasswordEncoderConfig.java`
-```
+```java
 package br.edu.uepb.coffee.settings;
 
 import org.springframework.context.annotation.Bean;
@@ -244,7 +244,7 @@ Agora precisamos configurar a proteção das rotas, excluindo o controller acima
 Para gerenciar o login dos usuários, é preciso ter duas classes importantes: uma para tratar da autenticação (verificação das credenciais e geração do token) e outra para tratar da autorização (verificação do token). As classes abaixo podem ser incluídas no pacote *settings*:
 
 `AuthenticationFilter.java`
-```
+```java
 package br.edu.uepb.coffee.settings;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -301,7 +301,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 ```
 
 `AuthorizationFilter.java`
-```
+```java
 package br.edu.uepb.coffee.settings;
 
 import java.io.IOException;
@@ -362,7 +362,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 Por último, uma configuração adicional é necessária para que certas rotas que não precisam de proteção por meio de token sejam autorizadas a funcionar sem segurança, como era até então. É o caso da rota que criamos no controller `SignUpController.java`, que precisa receber dados de um usuário novo, o qual, não faz sentido ter autenticação ou autorização. Outras rotas como a documentação e o acesso ao banco de dados em memória também podem ser incluídas nessa configuração, feita como na classe abaixo, também no pacote *settings*:
 
 `WebSecurityConfiguration.java`
-```
+```java
 package br.edu.uepb.coffee.settings;
 
 import org.springframework.context.annotation.Bean;
@@ -429,7 +429,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 Agora que temos as configurações de autenticação e autorização realizadas, podemos incluir o serviço específico para carregamento dos dados de um usuário quando uma requisição chegar:
 
 `UserDetailsServiceImpl.java`
-```
+```java
 package br.edu.uepb.coffee.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -468,5 +468,3 @@ Para testar seus recursos, tente acessar via Postman (ou outro software de sua p
 Para tanto, acesse a rota `/signup` e envie, no corpo da requisição, um username e um password, seguindo o modelo de dados definido no início deste tutorial. 
 
 Em seguida, use o mesmo corpo de requisição chamando a rota `/login`. Você receberá nos headers da resposta um cabeçalho chamado `Authorization`, no formato `Bearer meu_token`. Copie o meu token e adicione ao cabeçalho da sua nova requisição à API `/coffees`. 
-
-Para conferir a demonstração completa e o processo de codificação feito na aula, você pode [acessar aqui o vídeo](https://drive.google.com/file/d/1dnvNc3gCDTO_TV_R7-DSVcjQ-aX20-fZ/view?usp=sharing).
