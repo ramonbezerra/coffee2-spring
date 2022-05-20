@@ -443,6 +443,9 @@ import br.edu.uepb.coffee.services.CoffeeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import javassist.NotFoundException;
+package br.edu.uepb.coffee.controller;
+
+// imports...
 
 @RestController
 @RequestMapping(value = "/coffees", produces = MediaType.APPLICATION_JSON_VALUE + "; charset=utf-8")
