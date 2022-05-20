@@ -4,7 +4,7 @@ Nesta etapa, você vai aprender a inserir elementos do código que te ajudarão 
 
 ## Dependências necessárias
 
-Para executar essa configuração, adicionamos a dependência do Model Mapper. Nosso arquivo de configuração build.gradle ficou assim:
+Para executar essa configuração, adicionamos a dependência do Model Mapper. Nosso arquivo de configuração pom.xml ficou assim:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
