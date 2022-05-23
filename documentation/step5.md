@@ -127,6 +127,8 @@ Para executar essa configuração, adicionamos a dependência do Spring Security
 
 Para gerenciar a segurança de aplicações, o projeto Spring Security atua da seguinte maneira:
 
+![Atores envolvidos no processo de autenticação do Spring Security.](https://drek4537l1klr.cloudfront.net/spilca/Figures/CH02_F02_Spilca.png)
+
 - O AuthenticationFilter delega a solicitação de autenticação ao gerenciador de autenticação e, com base na resposta, configura o contexto de segurança.
 - O AuthenticationManager usa o provedor de autenticação para processar a autenticação.
 - O AuthenticationProvider implementa a lógica de autenticação.
@@ -386,7 +388,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 ## Customizando a autenticação básica com acesso ao banco de dados
 
-Nosso usuário joaozinho, até aqui, é mockado e não persiste em algum banco de dados. Para tanto, teremos que cadastrar usuários, gerenciando o acesso por meio de username e senha, que serão as credenciais para geração de tokens e posterior acesso aos recursos da API. Para tanto, é preciso adicionar uma nova entidade do domínio, como na classe abaixo. *Lembre-se também de adicionar seu DTO e seu Mapper!* 
+Nosso usuário joaozinho, até aqui, é mockado e não persiste em algum banco de dados. Para tanto, teremos que cadastrar usuários, gerenciando o acesso por meio de username e senha, que serão as credenciais para geração de tokens e posterior acesso aos recursos da API. Para tanto, é preciso adicionar uma nova entidade do domínio, como na classe a seguir. *Lembre-se também de adicionar seu DTO e seu Mapper!* 
+
+Antes, visualize como funciona de forma genérica o esquema de autentiação com acesso a um banco de dados.
+
+![Esquema genérico de fluxo de autenticação com acesso ao banco de dados](https://drek4537l1klr.cloudfront.net/spilca/Figures/CH03_F04_Spilca.png)
 
 `User.java`
 ```java
@@ -514,7 +520,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 }
 ```
 
-Voltando às classes envolvidas no Spring Security, nós iremos modificar o nosso `CustomAuthenticationProvider`, adicionando a busca no banco de dados com o UserDetailsService customizado, como nas classes a seguir: 
+Voltando às classes envolvidas no Spring Security, nós iremos modificar o nosso `CustomAuthenticationProvider`, adicionando a busca no banco de dados com o UserDetailsService customizado. Observe o esquema e a implementação, como nas classes a seguir: 
+
+![Uso do AuthenticationProvider na implementação da lógica de busca de usuários no banco de dados.](https://drek4537l1klr.cloudfront.net/spilca/Figures/CH03_F03_Spilca.png)
 
 `UserDetailsServiceImpl.java`
 ```java
