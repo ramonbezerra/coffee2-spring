@@ -1,6 +1,6 @@
 # Passo 5: Adicionando segurança à aplicação
 
-Nesta etapa, você vai aprender a configurar a parte de segurança da aplicação RESTful com o Spring Security, inserindo elementos no código que oferecem, de forma simples e flexível, recursos que te ajudarão a definir e proteger a comunicação entre as rotas e a interface consumidora da API com o uso de Tokens. 
+Nesta etapa, você vai aprender a configurar a parte de segurança da aplicação RESTful com o Spring Security, inserindo elementos no código que oferecem, de forma simples e flexível, recursos que te ajudarão a definir e proteger a comunicação entre as rotas e a interface consumidora da API de duas formas: com o uso de credenciais simples (usuário e senha) e Tokens JWT. 
 
 ## Dependências necessárias
 
@@ -123,43 +123,314 @@ Para executar essa configuração, adicionamos a dependência do Spring Security
 </project>
 ```
 
-## Adicionando novos componentes à aplicação
+## Entendendo a estrutura do Spring Security
 
-JSON Web Tokens, conhecidos como JWTs, são usados para formar autorização para usuários. Isso nos ajuda a construir APIs seguras e também é fácil de escalar. Durante a autenticação, um JWT é retornado. Sempre que o usuário deseja acessar um recurso protegido, o navegador deve enviar JWTs no cabeçalho de autorização junto com a solicitação. Uma coisa a entender aqui é que é uma boa prática de segurança proteger a API REST.
+Para gerenciar a segurança de aplicações, o projeto Spring Security atua da seguinte maneira:
 
-Logo, teremos que cadastrar usuários, gerenciando o acesso por meio de username e senha, que serão as credenciais para geração de tokens e posterior acesso aos recursos da API. Para tanto, é preciso adicionar uma nova entidade do domínio, como na classe abaixo. *Lembre-se também de adicionar seu DTO e seu Mapper!*
+- O AuthenticationFilter delega a solicitação de autenticação ao gerenciador de autenticação e, com base na resposta, configura o contexto de segurança.
+- O AuthenticationManager usa o provedor de autenticação para processar a autenticação.
+- O AuthenticationProvider implementa a lógica de autenticação.
+- O UserDetailsService do usuário implementa a responsabilidade de gerenciamento de usuários, que o provedor de autenticação usa na lógica de autenticação.
+- O PasswordEncoder implementa o gerenciamento de senha, que o provedor de autenticação usa na lógica de autenticação.
+- O SecurityContext mantém os dados de autenticação após o processo de autenticação.
+
+Quando a dependência do Spring Security é adicionada, nenhuma rota, por default, será mais acessível sem uma autenticação básica. Ao executar a aplicação, note que há algo semelhante à seguinte mensagem:
+
+```prompt
+Using generated security password: 93a01cf0-794b-4b98-86ef-54860f36f7f3
+```
+
+Isso significa que, para acessar qualquer rota, é necessário incluir as seguintes credenciais: `user:93a01cf0-794b-4b98-86ef-54860f36f7f3`. Porém, isso já representa um risco, que, por mais que essa senha seja aleatória, pode ser facilmente capturada pelo log da aplicação, que é público. 
+
+## Customizando a autenticação básica com usuário fixo
+
+Para configurar uma primeira forma de acesso com usuário e senha, é necessário implementar uma classe de configuração. Para tanto, no novo pacote `settings`, incluiremos a classe de configuração abaixo:
+
+`SecurityConfig.java`
+```java
+@Configuration
+public class SecurityConfig {
+
+	@Bean
+    public UserDetailsService userDetailsService() {
+		var userDetailsService = new InMemoryUserDetailsManager();
+
+		var user = User.withUsername("joaozinho")
+		.password("123456")
+		.authorities("user")
+		.build();
+
+		userDetailsService.createUser(user);
+
+		return userDetailsService;
+    }
+}
+```
+
+Essa classe, por si só, já nos mostra um dos atores envolvidos no esquema de funcionamento do Spring Security, porém, não é o suficiente. Para que a aplicação reconheça corretamente a senha fornecida, é necessário informar qual o esquema de criptografia. Iremos adotar um esquema vazio (sem criptografia), por enquanto, criando outra classe para isso, no mesmo pacote:
+
+`PasswordEncoderConfig.java`
+```java
+@Configuration
+public class PasswordEncoderConfig {
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+}
+```
+
+Agora é possível acessar a aplicação com as credenciais `joaozinho:123456`. 
+
+Na classe `SecurityConfig.java` é possível editar a configuração de autorização, sobrescrevendo mais um dos atores envolvidos no esquema de funcionamento do Spring Security, herdando da classe `WebSecurityConfigurerAdapter`, ficando assim:
+
+`SecurityConfig.java`
+```java
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+	@Bean
+    public UserDetailsService userDetailsService() {
+		// ... implementation
+    }
+	
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+	 	http.httpBasic();
+		// acesso ao Banco de Dados em memória (H2) - origem de endereço diferente (CORS)
+        http.cors().and().csrf().disable();
+        http.headers().frameOptions().sameOrigin(); 
+		
+		http.authorizeRequests().anyRequest().authenticated(); // ou .permitAll() para anular a necessidade de autenticação
+	}
+}
+```
+
+Nesse caso, a aplicação está requisitando uma autenticação básica com usuário e senha para todas as rotas.
+
+## Utilizando criptografia
+
+Para implementar um mecanismo de criptografia, é necessário substituir o bean que criamos na classe `PasswordEncoderConfig` como a seguir:
+
+`PasswordEncoderConfig.java`
+```java
+@Configuration
+public class PasswordEncoderConfig {
+    
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+```
+
+Dessa forma, a configuração de segurança poderia ficar assim:
+
+`SecurityConfig.java`
+```java
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+	@Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+	@Bean
+    public UserDetailsService userDetailsService() {
+		var userDetailsService = new InMemoryUserDetailsManager();
+
+		var user = User.withUsername("joaozinho")
+		.password(bCryptPasswordEncoder.encode("123456"))
+		.authorities("user")
+		.build();
+
+		userDetailsService.createUser(user);
+
+		return userDetailsService;
+    }
+	
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		// ... implementation
+	}
+}
+```
+
+Essa classe também poderia fazer uso de um outro método de configuração, ao invés do bean, como a seguir:
+
+`SecurityConfig.java`
+```java
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+	@Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+	@Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        var userDetailsService = new InMemoryUserDetailsManager();
+
+        var user = User.withUsername("joaozinho")
+        .password(bCryptPasswordEncoder.encode("0000"))
+        .authorities("user")
+        .build();
+
+        userDetailsService.createUser(user);
+
+        auth.userDetailsService(userDetailsService);
+    }
+	
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		// ... implementation
+	}
+}
+```
+
+Essa forma irá facilitar um caminho para simplificar as responsabilidades das classes envolvidas nesse gerenciamento customizado do Spring Security, que é a criação de um AuthenticationProvider, em um pacote de componentes, como a seguir:
+
+`CustomAuthenticationProvider.java`
+```java
+@Component
+@AllArgsConstructor(onConstructor = @__(@Autowired))
+public class CustomAuthenticationProvider implements AuthenticationProvider {
+
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Override
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        String username = authentication.getName();
+        String password = String.valueOf(authentication.getCredentials());
+
+        if ("joaozinho".equals(username) && "12345".equals(password)) {
+            return new UsernamePasswordAuthenticationToken(username, password, Arrays.asList());
+        } else {
+            throw new AuthenticationCredentialsNotFoundException("Error in authentication!");
+        }
+    }
+
+    @Override
+    public boolean supports(Class<?> authentication) {
+        return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
+    }
+}
+```
+
+Na classe anterior, tiramos a responsabilidade de armazenamento das informações de quais usuários são permitidos (nesse caso, apenas joaozinho), flexibilizando o uso na classe de configuração:
+
+`SecurityConfig.java`
+```java
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+	@Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+	
+	@Autowired
+    private CustomAuthenticationProvider authenticationProvider;
+
+	@Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(authenticationProvider);
+    }
+	
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		// ... implementation
+	}
+}
+```
+
+Antes de prosseguir para o próximo tópico, configure o segundo método para permitir que algumas rotas na aplicação possam ser acessadas sem a necessidade de autenticação: 
+
+`SecurityConfig.java`
+```java
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+	@Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+	
+	@Autowired
+    private CustomAuthenticationProvider authenticationProvider;
+	
+	private static final String[] AUTH_WHITELIST = {
+        "/v2/api-docs",
+        "/signup",
+        "/h2-console/**",
+        "/swagger-resources",
+        "/swagger-resources/**",
+        "/configuration/ui",
+        "/configuration/security",
+        "/swagger-ui.html",
+        "/webjars/**"
+    };
+
+	@Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(authenticationProvider);
+    }
+	
+	@Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.httpBasic();
+        // acesso ao Banco de Dados em memória (H2)
+        http.cors().and().csrf().disable();
+        http.headers().frameOptions().sameOrigin(); 
+        http.authorizeRequests()
+                .antMatchers(AUTH_WHITELIST).permitAll()
+                .mvcMatchers("/coffees/**").authenticated();
+    }
+}
+```
+
+## Customizando a autenticação básica com acesso ao banco de dados
+
+Nosso usuário joaozinho, até aqui, é mockado e não persiste em algum banco de dados. Para tanto, teremos que cadastrar usuários, gerenciando o acesso por meio de username e senha, que serão as credenciais para geração de tokens e posterior acesso aos recursos da API. Para tanto, é preciso adicionar uma nova entidade do domínio, como na classe abaixo. *Lembre-se também de adicionar seu DTO e seu Mapper!* 
 
 `User.java`
 ```java
-package br.edu.uepb.coffee.domain;
-
-import java.io.Serializable;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+@Data
+@Builder
 @Entity
 @Table(name = "users")
-@Data
+@AllArgsConstructor
 @NoArgsConstructor
-public class User implements Serializable {
-    
+public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-
-    @Column(name = "username")
+    @Column(unique = true, nullable = false)
     private String username;
-    
-    @Column(name = "password")
+    @Column(unique = true, nullable = false)
     private String password;
+    private String authority;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(() -> this.authority);
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
 ```
 
@@ -243,53 +514,121 @@ public interface UserRepository extends JpaRepository<User, Long> {
 }
 ```
 
-Um novo componente Bean também é necessário, para criptografia das senhas dos usuários.
+Voltando às classes envolvidas no Spring Security, nós iremos modificar o nosso `CustomAuthenticationProvider`, adicionando a busca no banco de dados com o UserDetailsService customizado, como nas classes a seguir: 
 
-`PasswordEncoderConfig.java`
+`UserDetailsServiceImpl.java`
 ```java
-package br.edu.uepb.coffee.settings;
+package br.edu.uepb.coffee.services;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Component;
 
-@Configuration
-public class PasswordEncoderConfig {
+import br.edu.uepb.coffee.domain.User;
+import br.edu.uepb.coffee.repository.UserRepository;
+
+import java.util.Collections;
+
+@Component
+public class UserDetailsServiceImpl implements UserDetailsService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException(username);
+        }
+        return User.builder().username(user.getUsername()).password(user.getPassword()).authority(user.getAuthority()).build();
+    }
     
-    @Bean
-    BCryptPasswordEncoder getEncoder() {
-        return new BCryptPasswordEncoder();
+}
+``` 
+
+`CustomAuthenticationProvider.java`
+```java
+@Component
+@AllArgsConstructor(onConstructor = @__(@Autowired))
+public class CustomAuthenticationProvider implements AuthenticationProvider {
+
+	private UserDetailsService userDetailsService;
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Override
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        String username = authentication.getName();
+        String password = String.valueOf(authentication.getCredentials());
+
+        UserDetails u = userDetailsService.loadUserByUsername(username);
+        if (bCryptPasswordEncoder.matches(password, u.getPassword())) {
+            return new UsernamePasswordAuthenticationToken(username, password, u.getAuthorities());
+        } else {
+            throw new AuthenticationCredentialsNotFoundException("Error in authentication!");
+        }
+    }
+
+    @Override
+    public boolean supports(Class<?> authentication) {
+        return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
     }
 }
 ```
+
+## Recuperando informações do usuário logado
+
+Antes de prosseguir para a próxima seção, saiba que é possível fornecer informações do usuário logado, criando um facade para isso, no pacote de componentes: 
+
+`IAuthenticationFacade.java`
+```java
+public interface IAuthenticationFacade {
+    Authentication getAuthenticationInfo();
+}
+```
+
+`AuthenticationFacade.java`
+```java
+@Component
+public class AuthenticationFacade implements IAuthenticationFacade {
+    @Override
+    public Authentication getAuthenticationInfo() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+}
+```
+
+Com essa implementação, que é a mais segura e não expõe dados sensíveis nos parâmetros das rotas, é possível implementar um novo recurso para recuperar a informação do usuário logado:
+
+`HelloController.java`
+```java
+@RestController
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+public class HelloController {
+
+    private final AuthenticationFacade authenticationFacade;
+    
+    @GetMapping("/greetings")
+    public ResponseEntity<?> hello() {
+        return ResponseEntity.ok().body("Hello " + authenticationFacade.getAuthenticationInfo().getName() + "!");
+    }
+}
+```
+
+## Reconfigurando a autenticação para uso de Tokens JWT
+
+JSON Web Tokens, conhecidos como JWTs, são usados para formar autorização para usuários. Isso nos ajuda a construir APIs seguras e também é fácil de escalar. Durante a autenticação, um JWT é retornado. Sempre que o usuário deseja acessar um recurso protegido, o navegador deve enviar JWTs no cabeçalho de autorização junto com a solicitação. Uma coisa a entender aqui é que é uma boa prática de segurança proteger a API REST.
 
 Agora precisamos configurar a proteção das rotas, excluindo o controller acima e outras rotas de interesse.
 
 ## Efetuando o Login
 
-Para gerenciar o login dos usuários, é preciso ter duas classes importantes: uma para tratar da autenticação (verificação das credenciais e geração do token) e outra para tratar da autorização (verificação do token). As classes abaixo podem ser incluídas no pacote *settings*:
+Para gerenciar o login dos usuários, é preciso ter duas classes importantes: uma para tratar da autenticação (verificação das credenciais e geração do token) e outra para tratar da autorização (verificação do token). As classes abaixo podem ser incluídas no pacote *filters*:
 
 `AuthenticationFilter.java`
 ```java
-package br.edu.uepb.coffee.settings;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     
     private AuthenticationManager authenticationManager;
@@ -328,23 +667,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 `AuthorizationFilter.java`
 ```java
-package br.edu.uepb.coffee.settings;
-
-import java.io.IOException;
-import java.util.ArrayList;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-
-import io.jsonwebtoken.Jwts;
-
 public class AuthorizationFilter extends BasicAuthenticationFilter {
     
     public AuthorizationFilter(AuthenticationManager authenticationManager) {
@@ -385,34 +707,21 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 }
 ```
 
-Por último, uma configuração adicional é necessária para que certas rotas que não precisam de proteção por meio de token sejam autorizadas a funcionar sem segurança, como era até então. É o caso da rota que criamos no controller `SignUpController.java`, que precisa receber dados de um usuário novo, o qual, não faz sentido ter autenticação ou autorização. Outras rotas como a documentação e o acesso ao banco de dados em memória também podem ser incluídas nessa configuração, feita como na classe abaixo, também no pacote *settings*:
+Por último, basta incluir os filters no arquivo de configuração, como a seguir. Também é possível reforçar a configuração de CORS:
 
-`WebSecurityConfiguration.java`
+`SecurityConfig.java`
 ```java
-package br.edu.uepb.coffee.settings;
+@Configuration
+@AllArgsConstructor(onConstructor = @__(@Autowired))
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-@EnableWebSecurity
-public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
-    
     private BCryptPasswordEncoder bCryptPasswordEncoder;
-    private UserDetailsService userDetailsService;
-
-    private static final String[] AUTH_WHITELIST = {
+    private CustomAuthenticationProvider authenticationProvider;
+	
+	private static final String[] AUTH_WHITELIST = {
         "/v2/api-docs",
         "/signup",
-        "/h2-console",
+        "/h2-console/**",
         "/swagger-resources",
         "/swagger-resources/**",
         "/configuration/ui",
@@ -421,27 +730,27 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         "/webjars/**"
     };
 
-    public WebSecurityConfiguration(UserDetailsService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder) {
-        this.userDetailsService = userDetailsService;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;        
+	@Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(authenticationProvider);
     }
-
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.headers().frameOptions().sameOrigin(); // acesso ao Banco de Dados em memória (H2)
-        httpSecurity.cors().and().csrf().disable()
-            .authorizeRequests()
+	
+	@Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.httpBasic();
+        // acesso ao Banco de Dados em memória (H2)
+        http.cors().and().csrf().disable();
+        http.headers().frameOptions().sameOrigin(); 
+        http.authorizeRequests()
+		.authorizeRequests()
             .antMatchers(AUTH_WHITELIST).permitAll()
             .anyRequest().authenticated()
             .and().addFilter(new AuthenticationFilter(authenticationManager()))
             .addFilter(new AuthorizationFilter(authenticationManager()))
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
-
-    public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-        authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
-    }
-
-    @Bean
+	
+	@Bean
     CorsConfigurationSource corsConfigurationSource() {
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**",new CorsConfiguration().applyPermitDefaultValues());
@@ -449,43 +758,6 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 }
 ```
-
-## Adicionando novos serviços
-
-Agora que temos as configurações de autenticação e autorização realizadas, podemos incluir o serviço específico para carregamento dos dados de um usuário quando uma requisição chegar:
-
-`UserDetailsServiceImpl.java`
-```java
-package br.edu.uepb.coffee.services;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
-
-import br.edu.uepb.coffee.domain.User;
-import br.edu.uepb.coffee.repository.UserRepository;
-
-import java.util.Collections;
-
-@Component
-public class UserDetailsServiceImpl implements UserDetailsService {
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username);
-        }
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), Collections.emptyList());
-    }
-    
-}
-``` 
 
 ## Demonstração
 
