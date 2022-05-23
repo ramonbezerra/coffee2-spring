@@ -715,7 +715,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 }
 ```
 
-Por último, basta incluir os filters no arquivo de configuração, como a seguir. Também é possível reforçar a configuração de CORS:
+Por último, basta incluir os filters no arquivo de configuração, dispensando o uso do AuthenticationProvider, como a seguir. Também é possível reforçar a configuração de CORS:
 
 `SecurityConfig.java`
 ```java
@@ -724,7 +724,7 @@ Por último, basta incluir os filters no arquivo de configuração, como a segui
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private BCryptPasswordEncoder bCryptPasswordEncoder;
-    private CustomAuthenticationProvider authenticationProvider;
+    private UserDetailsService userDetailsService;
 	
 	private static final String[] AUTH_WHITELIST = {
         "/v2/api-docs",
@@ -740,7 +740,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(authenticationProvider);
+        auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
     }
 	
 	@Override
