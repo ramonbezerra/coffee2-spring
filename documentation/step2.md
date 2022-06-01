@@ -4,7 +4,7 @@ Nesta etapa, você conseguirá inserir a configuração de acesso ao banco de da
 
 ## Dependências necessárias
 
-Para executar essa configuração, adicionamos a dependência do Spring Data JPA e simularemos um banco em memória com o H2. Nosso arquivo de configuração pom.xml ficou assim:
+Para executar essa configuração, adicionamos a dependência do Spring Data JPA e simularemos um banco em memória com o H2. Caso você utilize o Maven, o arquivo de configuração pom.xml fica assim:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -80,6 +80,44 @@ Para executar essa configuração, adicionamos a dependência do Spring Data JPA
 	</build>
 
 </project>
+```
+
+Caso você utilize o Gradle, o arquivo de configuração pom.xml fica assim:
+
+```gradle
+plugins {
+	id 'org.springframework.boot' version '2.5.13'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+}
+
+group = 'br.edu.uepb'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  	runtimeOnly 'com.h2database:h2'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
 ```
 
 ## Configurando um JPA Repository
