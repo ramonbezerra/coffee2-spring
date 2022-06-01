@@ -4,7 +4,7 @@ Nesta etapa, você vai aprender a inserir elementos do código que te ajudarão 
 
 ## Dependências necessárias
 
-Para executar essa configuração, adicionamos a dependência do Model Mapper. Nosso arquivo de configuração pom.xml ficou assim:
+Para executar essa configuração, adicionamos a dependência do Model Mapper. Caso você utilize o Maven, o arquivo de configuração pom.xml fica assim:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -95,6 +95,47 @@ Para executar essa configuração, adicionamos a dependência do Model Mapper. N
 	</build>
 
 </project>
+```
+
+Caso você utilize o Gradle, o arquivo de configuração build.gradle fica assim:
+
+```gradle
+plugins {
+	id 'org.springframework.boot' version '2.5.13'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+}
+
+group = 'br.edu.uepb'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  	runtimeOnly 'com.h2database:h2'
+	implementation 'io.springfox:springfox-swagger2:2.9.2'
+	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+	implementation 'org.modelmapper:modelmapper:2.4.5'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
 ```
 
 ## Adicionando novas classes: os DTOs
