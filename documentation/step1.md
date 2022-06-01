@@ -16,7 +16,7 @@ As IDEs (Ambientes Integrados de Desenvolvimento) como o IntelliJ ou VSCode (atr
 
 Daí por diante, é necessário fornecer os metadados como grupo de pacotes, nome do artefato e do projeto, descrição, a forma de empacotamento entre .jar (utilizada neste projeto) e .war e a versão do Java (a versão 11 é a utilizada neste projeto). 
 
-Nosso arquivo de configuração pom.xml, com as dependências mais básicas como **Spring Boot DevTools**, **Spring Web** e **Lombok**, ficou assim:
+Caso você utilize o Maven, o arquivo de configuração, pom.xml, com as dependências mais básicas como **Spring Boot DevTools**, **Spring Web** e **Lombok**, fica assim:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -79,6 +79,41 @@ Nosso arquivo de configuração pom.xml, com as dependências mais básicas como
 	</build>
 
 </project>
+```
+Caso você utilize o Gradle, o arquivo de configuração, build.gradle, com as dependências mais básicas como **Spring Boot DevTools**, **Spring Web** e **Lombok**, fica assim:
+
+```gradle
+plugins {
+	id 'org.springframework.boot' version '2.5.13'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+}
+
+group = 'br.edu.uepb'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
 ```
 
 ## Criando um Controller
