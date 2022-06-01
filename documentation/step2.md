@@ -82,7 +82,7 @@ Para executar essa configuração, adicionamos a dependência do Spring Data JPA
 </project>
 ```
 
-Caso você utilize o Gradle, o arquivo de configuração pom.xml fica assim:
+Caso você utilize o Gradle, o arquivo de configuração build.gradle fica assim:
 
 ```gradle
 plugins {
