@@ -39,16 +39,6 @@ Para executar essa configuração, adicionamos a dependência do Model Mapper. C
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 		<dependency>
-		    <groupId>io.springfox</groupId>
-		    <artifactId>springfox-swagger2</artifactId>
-		    <version>2.9.2</version>
-		</dependency>
-		<dependency>
-		    <groupId>io.springfox</groupId>
-		    <artifactId>springfox-swagger-ui</artifactId>
-		    <version>2.9.2</version>
-		</dependency>
-		<dependency>
 			<groupId>org.modelmapper</groupId>
 			<artifactId>modelmapper</artifactId>
 			<version>2.4.5</version>
@@ -128,8 +118,6 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
   	runtimeOnly 'com.h2database:h2'
-	implementation 'io.springfox:springfox-swagger2:2.9.2'
-	implementation 'io.springfox:springfox-swagger-ui:2.9.2'
 	implementation 'org.modelmapper:modelmapper:2.4.5'
 }
 
@@ -185,19 +173,14 @@ import br.edu.uepb.coffee.domain.Coffee;
 import br.edu.uepb.coffee.dto.CoffeeDTO;
 import br.edu.uepb.coffee.repository.CoffeeRepository;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-
 @RestController
 @RequestMapping("/coffees")
-@Api(value = "Coffee")
 public class CoffeeController {
 
     @Autowired
     private CoffeeRepository coffeeRepository;
 
     @GetMapping
-    @ApiOperation(value = "Busca uma lista de todos os cafés")
     public List<CoffeeDTO> getCoffees() {
         return coffeeRepository.findAll(); // error
     }
@@ -279,30 +262,10 @@ Agora que temos a configuração de mapeamento realizada, podemos incluir a nova
 ```java
 package br.edu.uepb.coffee.controller;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import br.edu.uepb.coffee.domain.Coffee;
-import br.edu.uepb.coffee.dto.CoffeeDTO;
-import br.edu.uepb.coffee.mapper.CoffeeMapper;
-import br.edu.uepb.coffee.repository.CoffeeRepository;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+// imports ... 
 
 @RestController
 @RequestMapping("/coffees")
-@Api(value = "Coffee")
 public class CoffeeController {
 
     @Autowired
@@ -461,7 +424,6 @@ package br.edu.uepb.coffee.controller;
 
 @RestController
 @RequestMapping(value = "/coffees", produces = MediaType.APPLICATION_JSON_VALUE + "; charset=utf-8")
-@Api(value = "Coffee")
 public class CoffeeController {
 
     @Autowired
@@ -471,7 +433,6 @@ public class CoffeeController {
     private CoffeeMapper coffeeMapper;
 
     @GetMapping
-    @ApiOperation(value = "Busca uma lista de todos os cafés")
     public List<CoffeeDTO> getCoffees() {
         List<Coffee> coffees = coffeeService.listAllCoffees();
         return coffees.stream()
@@ -480,7 +441,6 @@ public class CoffeeController {
     }
 
     @GetMapping("/{id}")
-    @ApiOperation(value = "Busca um café pelo seu identificador")
     public ResponseEntity<?> getCoffeeById(@PathVariable Long id) {
         try {
             return new ResponseEntity<>(coffeeMapper.convertToCoffeeDTO(coffeeService.findById(id)), HttpStatus.OK);
@@ -490,7 +450,6 @@ public class CoffeeController {
     }
 
     @PostMapping
-    @ApiOperation(value = "Cria um novo café")
     public ResponseEntity<?> createCoffee(@RequestBody CoffeeDTO coffeeDTO) {
         try {
             Coffee coffee = coffeeMapper.convertFromCoffeeDTO(coffeeDTO);
@@ -501,7 +460,6 @@ public class CoffeeController {
     }
 
     @PatchMapping
-    @ApiOperation(value = "Atualiza o valor de um café concedendo desconto")
     public ResponseEntity<?> updateDiscountCoffee(@RequestBody CoffeeWithDiscountDTO coffeeDTO) {
         try {
             Coffee coffee = coffeeMapper.convertFromCoffeeWithDiscountDTO(coffeeDTO);
@@ -513,14 +471,12 @@ public class CoffeeController {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Atualiza um café a partir do seu identificador")
     public CoffeeDTO updateCoffee(@PathVariable("id") Long id, @RequestBody CoffeeDTO coffeeDTO) {
         Coffee coffee = coffeeMapper.convertFromCoffeeDTO(coffeeDTO);
         return coffeeMapper.convertToCoffeeDTO(coffeeService.updateCoffee(id, coffee));
     }
 
     @DeleteMapping("/{id}")
-    @ApiOperation(value = "Exclui um café a partir do seu identificador")
     public void deleteCoffee(@PathVariable Long id) {
         coffeeService.deleteCoffee(id);
     }
