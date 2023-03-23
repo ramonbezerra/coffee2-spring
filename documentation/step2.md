@@ -234,6 +234,7 @@ spring.datasource.url=jdbc:h2:mem:db
 spring.datasource.username=sa
 spring.datasource.password=
 spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.show-sql=true
 spring.h2.console.enabled=true
 ```
 
